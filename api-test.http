@@ -1,0 +1,104 @@
+### Smart AI Task Organizer API Tests
+### Use with REST Client extension in VS Code
+
+@baseUrl = http://localhost:8000
+@email = demo@example.com
+@password = demo123
+
+### Register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123",
+  "name": "Test User"
+}
+
+### Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+### Get Access Token
+@accessToken = {{login.response.body.access_token}}
+
+### Get Current User
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+### Refresh Token
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{login.response.body.refresh_token}}"
+}
+
+### List Tasks
+GET {{baseUrl}}/tasks?page=1&size=20
+Authorization: Bearer {{accessToken}}
+
+### Create Task
+POST {{baseUrl}}/tasks
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Complete project",
+  "description": "Finish the task management system",
+  "priority": "high",
+  "due_at": "2024-12-31T23:59:00Z",
+  "remind_at": "2024-12-31T22:00:00Z"
+}
+
+### Get Task
+GET {{baseUrl}}/tasks/1
+Authorization: Bearer {{accessToken}}
+
+### Update Task
+PATCH {{baseUrl}}/tasks/1
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "status": "in_progress"
+}
+
+### Delete Task
+DELETE {{baseUrl}}/tasks/1
+Authorization: Bearer {{accessToken}}
+
+### Get Analytics Summary
+GET {{baseUrl}}/analytics/summary
+Authorization: Bearer {{accessToken}}
+
+### AI Suggestions
+POST {{baseUrl}}/ai/suggest
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "title": "Important meeting",
+  "description": "Prepare presentation for client",
+  "estimated_duration_minutes": 60
+}
+
+### Subscribe to Push Notifications
+POST {{baseUrl}}/notifications/subscribe
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "endpoint": "https://fcm.googleapis.com/fcm/send/...",
+  "keys": {
+    "p256dh": "base64encodedkey",
+    "auth": "base64encodedauth"
+  }
+}
+
