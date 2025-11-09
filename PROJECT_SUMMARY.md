@@ -85,11 +85,8 @@ smart-ai-task-organizer/
    ```bash
    cd backend
    python -m venv venv
-   source venv/bin/activate
+   venv/scripts/activate
    pip install -r requirements.txt
-   cp .env.example .env
-   # Edit .env
-   python scripts/seed.py  # Create demo user
    uvicorn app.main:app --reload
    ```
 
@@ -97,8 +94,6 @@ smart-ai-task-organizer/
    ```bash
    cd frontend
    npm install
-   cp .env.example .env
-   # Edit .env
    npm run dev
    ```
 
