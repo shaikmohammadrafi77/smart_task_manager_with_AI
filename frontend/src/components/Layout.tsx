@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 
 interface LayoutProps {
@@ -7,6 +7,7 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const location = useLocation()
+  const navigate = useNavigate()
   const { user, logout } = useAuthStore()
 
   const navItems = [
@@ -30,7 +31,7 @@ export default function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors ${
                       location.pathname === item.path
                         ? 'border-blue-500 text-gray-900'
                         : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
@@ -40,6 +41,20 @@ export default function Layout({ children }: LayoutProps) {
                     {item.label}
                   </Link>
                 ))}
+              </div>
+              {/* Mobile menu button */}
+              <div className="sm:hidden ml-6">
+                <select
+                  value={location.pathname}
+                  onChange={(e) => navigate(e.target.value)}
+                  className="text-sm font-medium text-gray-700 border border-gray-300 rounded-md px-2 py-1 focus:outline-none focus:ring-blue-500"
+                >
+                  {navItems.map((item) => (
+                    <option key={item.path} value={item.path}>
+                      {item.icon} {item.label}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="flex items-center">

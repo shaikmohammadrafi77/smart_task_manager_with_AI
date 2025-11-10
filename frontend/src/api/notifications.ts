@@ -9,6 +9,10 @@ export interface PushSubscriptionData {
 }
 
 export const notificationsApi = {
+  getVapidPublicKey: async (): Promise<{ public_key: string }> => {
+    const response = await api.get('/notifications/vapid-public-key')
+    return response.data
+  },
   subscribe: async (subscription: PushSubscriptionData): Promise<{ status: string }> => {
     const response = await api.post('/notifications/subscribe', subscription)
     return response.data

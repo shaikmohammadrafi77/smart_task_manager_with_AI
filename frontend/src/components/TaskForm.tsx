@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { tasksApi, type Task, type TaskCreate, type TaskUpdate, type Priority } from '../api/tasks'
 import { aiApi } from '../api/ai'
+import { useToastStore } from './Toast'
 
 interface TaskFormProps {
   task?: Task | null
@@ -16,6 +17,8 @@ export default function TaskForm({ task, onClose, onSuccess }: TaskFormProps) {
   const [dueAt, setDueAt] = useState('')
   const [remindAt, setRemindAt] = useState('')
   const [loadingAI, setLoadingAI] = useState(false)
+  const [aiSuggestion, setAISuggestion] = useState<{ priority: string; reasoning: string } | null>(null)
+  const { addToast } = useToastStore()
 
   useEffect(() => {
     if (task) {
@@ -29,22 +32,35 @@ export default function TaskForm({ task, onClose, onSuccess }: TaskFormProps) {
 
   const createMutation = useMutation({
     mutationFn: (data: TaskCreate) => tasksApi.create(data),
-    onSuccess,
+    onSuccess: () => {
+      addToast('Task created successfully!', 'success')
+      onSuccess()
+    },
+    onError: () => {
+      addToast('Failed to create task. Please try again.', 'error')
+    },
   })
 
   const updateMutation = useMutation({
     mutationFn: (data: { id: number; update: TaskUpdate }) =>
       tasksApi.update(data.id, data.update),
-    onSuccess,
+    onSuccess: () => {
+      addToast('Task updated successfully!', 'success')
+      onSuccess()
+    },
+    onError: () => {
+      addToast('Failed to update task. Please try again.', 'error')
+    },
   })
 
   const handleAISuggest = async () => {
     if (!title.trim()) {
-      alert('Please enter a task title first')
+      addToast('Please enter a task title first', 'warning')
       return
     }
 
     setLoadingAI(true)
+    setAISuggestion(null)
     try {
       const suggestion = await aiApi.suggest({
         title,
@@ -53,12 +69,21 @@ export default function TaskForm({ task, onClose, onSuccess }: TaskFormProps) {
       setPriority(suggestion.suggested_priority as Priority)
       if (suggestion.suggested_time_slots.length > 0) {
         const slot = suggestion.suggested_time_slots[0]
-        setDueAt(new Date(slot.start).toISOString().slice(0, 16))
-        setRemindAt(new Date(slot.start).toISOString().slice(0, 16))
+        const slotDate = new Date(slot.start)
+        // Validate date is not in the past
+        if (slotDate > new Date()) {
+          setDueAt(slotDate.toISOString().slice(0, 16))
+          setRemindAt(slotDate.toISOString().slice(0, 16))
       }
-      alert(`AI Suggestion: ${suggestion.priority_reason}\n${suggestion.reasoning}`)
+      }
+      setAISuggestion({
+        priority: suggestion.priority_reason,
+        reasoning: suggestion.reasoning,
+      })
+      addToast('AI suggestions applied successfully!', 'success')
     } catch (error) {
       console.error('AI suggestion error:', error)
+      addToast('Failed to get AI suggestions. Please try again.', 'error')
     } finally {
       setLoadingAI(false)
     }
@@ -66,6 +91,26 @@ export default function TaskForm({ task, onClose, onSuccess }: TaskFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate dates (only for new tasks or if dates are being changed)
+    if (dueAt && !task) {
+      // For new tasks, don't allow past dates
+      const dueDate = new Date(dueAt)
+      const now = new Date()
+      if (dueDate < now) {
+        addToast('Due date cannot be in the past', 'error')
+        return
+      }
+    }
+
+    if (remindAt && dueAt) {
+      const remindDate = new Date(remindAt)
+      const dueDate = new Date(dueAt)
+      if (remindDate > dueDate) {
+        addToast('Reminder date cannot be after due date', 'error')
+        return
+      }
+    }
 
     const data: TaskCreate | TaskUpdate = {
       title,
@@ -132,12 +177,32 @@ export default function TaskForm({ task, onClose, onSuccess }: TaskFormProps) {
                 type="button"
                 onClick={handleAISuggest}
                 disabled={loadingAI}
-                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50"
+                className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loadingAI ? 'Loading...' : '🤖 AI Suggest'}
               </button>
             </div>
           </div>
+
+          {aiSuggestion && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="flex items-start gap-2">
+                <span className="text-purple-600 font-bold">🤖</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-purple-900 mb-1">AI Suggestion Applied</p>
+                  <p className="text-xs text-purple-700 mb-2">{aiSuggestion.priority}</p>
+                  <p className="text-xs text-purple-600">{aiSuggestion.reasoning}</p>
+                </div>
+                <button
+                  onClick={() => setAISuggestion(null)}
+                  className="text-purple-400 hover:text-purple-600"
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
@@ -145,6 +210,7 @@ export default function TaskForm({ task, onClose, onSuccess }: TaskFormProps) {
               type="datetime-local"
               value={dueAt}
               onChange={(e) => setDueAt(e.target.value)}
+              min={task ? undefined : new Date().toISOString().slice(0, 16)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500"
             />
           </div>
@@ -155,6 +221,8 @@ export default function TaskForm({ task, onClose, onSuccess }: TaskFormProps) {
               type="datetime-local"
               value={remindAt}
               onChange={(e) => setRemindAt(e.target.value)}
+              min={task ? undefined : new Date().toISOString().slice(0, 16)}
+              max={dueAt || undefined}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500"
             />
           </div>

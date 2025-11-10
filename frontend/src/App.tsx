@@ -9,9 +9,11 @@ import Settings from './pages/Settings'
 import Profile from './pages/Profile'
 import PrivateRoute from './components/PrivateRoute'
 import { useAuthStore } from './store/authStore'
+import { ToastContainer, useToastStore } from './components/Toast'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
+  const { toasts, removeToast } = useToastStore()
 
   return (
     <BrowserRouter>
@@ -60,6 +62,7 @@ function App() {
         />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      <ToastContainer toasts={toasts} onClose={removeToast} />
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
     </BrowserRouter>
   )

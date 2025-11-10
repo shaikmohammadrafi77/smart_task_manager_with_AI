@@ -11,6 +11,8 @@ apscheduler==3.10.1
 pyjwt==2.8.0
 python-dotenv==1.0.0
 email-validator==2.1.0
+cryptography==41.0.7
+pywebpush==1.14.0
 # Optional ML dependencies (uncomment if you have Visual C++ Build Tools on Windows)
 # scikit-learn==1.4.0
 # numpy==1.26.3

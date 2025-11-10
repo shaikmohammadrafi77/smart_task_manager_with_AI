@@ -19,10 +19,30 @@ interface TasksChartProps {
 }
 
 export default function TasksChart({ data }: TasksChartProps) {
-  if (!data) return null
+  if (!data || !data.tasks_per_day) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4">Tasks Created (Last 14 Days)</h3>
+        <div className="flex items-center justify-center h-64 text-gray-500">
+          No task data available
+        </div>
+      </div>
+    )
+  }
 
-  const dates = Object.keys(data.tasks_per_day).sort()
+  const dates = Object.keys(data.tasks_per_day || {}).sort()
   const counts = dates.map((date) => data.tasks_per_day[date])
+
+  if (dates.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4">Tasks Created (Last 14 Days)</h3>
+        <div className="flex items-center justify-center h-64 text-gray-500">
+          No tasks created in the last 14 days
+        </div>
+      </div>
+    )
+  }
 
   const chartData = {
     labels: dates.map((date) => new Date(date).toLocaleDateString()),

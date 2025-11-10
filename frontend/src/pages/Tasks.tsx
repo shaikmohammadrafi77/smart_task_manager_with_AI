@@ -5,6 +5,7 @@ import { tasksApi, type Task, type Priority, type Status } from '../api/tasks'
 import TaskForm from '../components/TaskForm'
 import TaskList from '../components/TaskList'
 import TaskFilters from '../components/TaskFilters'
+import { useToastStore } from '../components/Toast'
 
 export default function Tasks() {
   const queryClient = useQueryClient()
@@ -14,6 +15,7 @@ export default function Tasks() {
     status?: Status
     priority?: Priority
   }>({})
+  const { addToast } = useToastStore()
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ['tasks', filters],
@@ -24,6 +26,10 @@ export default function Tasks() {
     mutationFn: tasksApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      addToast('Task deleted successfully', 'success')
+    },
+    onError: () => {
+      addToast('Failed to delete task', 'error')
     },
   })
 
@@ -33,7 +39,7 @@ export default function Tasks() {
   }
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this task?')) {
+    if (window.confirm('Are you sure you want to delete this task?')) {
       deleteMutation.mutate(id)
     }
   }

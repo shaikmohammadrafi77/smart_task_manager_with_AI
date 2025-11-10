@@ -52,7 +52,20 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture.
    # Edit .env with your settings
    ```
 
-3. **Run with Make (Linux/Mac) or Batch files (Windows):**
+3. **Generate VAPID keys for push notifications (Optional but recommended):**
+   ```bash
+   cd backend
+   # Windows
+   scripts\generate_vapid_keys.bat
+   # Linux/Mac
+   chmod +x scripts/generate_vapid_keys.sh
+   ./scripts/generate_vapid_keys.sh
+   # Or directly with Python
+   python scripts/generate_vapid_keys.py
+   ```
+   Copy the generated keys to your `.env` files (see [VAPID_SETUP.md](VAPID_SETUP.md) for details).
+
+4. **Run with Make (Linux/Mac) or Batch files (Windows):**
    ```bash
    # Linux/Mac
    make dev        # Full stack with docker-compose
@@ -83,6 +96,7 @@ Access:
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [Testing Guide](docs/TESTING.md)
 - [Roadmap](docs/ROADMAP.md)
+- [VAPID Keys Setup](VAPID_SETUP.md) - Push notifications configuration
 
 ## 🧪 Testing
 
